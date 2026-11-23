@@ -17,7 +17,6 @@ const tmdbClient = axios.create({
     }
 })
 
-
 function simplificarFilme(filme) {
     return {
         id: filme.id,
@@ -32,6 +31,16 @@ function simplificarFilme(filme) {
     }
 }
 
+function simplificarProvedores(lista) {
+    return (lista || []).map(provedor => {
+        return {
+            nome: provedor.provider_name,
+            logo: provedor.logo_path
+                ? `https://image.tmdb.org/t/p/w92${provedor.logo_path}`
+                : null
+        }
+    })
+}
 
 app.get('/', (req, res) => {
     res.json({
@@ -84,6 +93,64 @@ app.get('/filmes', (req, res) => {
             })
         })
 
+})
+
+app.get('/filme', (req, res) => {
+    const id = req.query.id
+
+    if (!id) {
+        return res.status(400).json({
+            mensagem: 'Informe o id do filme.'
+        })
+    }
+
+    tmdbClient.get(`/movie/${id}`, {
+        params: {
+            append_to_response: 'watch/providers'
+        }
+    })
+        .then(resultado => {
+
+            const dados = resultado.data
+
+            const filme = simplificarFilme(dados)
+
+            const brasil = dados['watch/providers'].results.BR || {}
+
+            filme.duracao = dados.runtime || null
+
+            filme.generos = dados.genres.map(genero => genero.name)
+
+            filme.sinopse = dados.overview || null
+
+            filme.fundo = dados.backdrop_path
+                ? `https://image.tmdb.org/t/p/w780${dados.backdrop_path}`
+                : null
+
+            filme.ondeAssistir = {
+                assinatura: simplificarProvedores(brasil.flatrate),
+                aluguel: simplificarProvedores(brasil.rent),
+                compra: simplificarProvedores(brasil.buy)
+            }
+
+            res.json(filme)
+
+        })
+        .catch(erro => {
+
+            console.log(erro)
+
+            if (erro.response && erro.response.status === 404) {
+                return res.status(404).json({
+                    mensagem: 'Filme não encontrado.'
+                })
+            }
+
+            res.status(502).json({
+                mensagem: 'Não foi possível consultar o catálogo de filmes.'
+            })
+
+        })
 })
 
 
