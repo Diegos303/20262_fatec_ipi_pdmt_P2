@@ -7,6 +7,7 @@ import ListaFilmes from './src/components/ListaFilmes'
 import backendClient from './src/utils/backendClient'
 import { useEffect,useState } from 'react'
 import Busca from './src/components/Busca'
+import DetalhesFilmes from './src/components/DetalhesFilme'
 
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
   const [resultados, setResultados] = useState(null)
   const [procurando, setProcurando] = useState(false)
   const [termo, setTermo] = useState('')
+  const [filmeSelecionado, setFilmeSelecionado] = useState(null)
 
   useEffect(() => {
     backendClient.get('/em-alta')
@@ -55,41 +57,53 @@ export default function App() {
     setErro(null)
   }
 
- 
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <Cabecalho />
-         <Busca
-          termo={termo}
-          onTermoAlterado={setTermo}
-          onBuscar={buscar}
-          onLimpar={limpar}
-        />
-        <View style={styles.conteudo}>
-          {procurando ? (
-            <Carregando mensagem='Procurando filmes...'/>
-          )
-           : carregando ? (
-            <Carregando mensagem="Buscando os filmes em alta..." />
-          ) : erro ? (
-            <Text style={styles.erro}>{erro}</Text>
-          ) : resultados === null ? (
-            <ListaFilmes titulo="Em alta nesta semana" filmes={emAlta} 
-            
+        {filmeSelecionado === null ? (
+         <View style={styles.container}> 
+          <Busca
+            termo={termo}
+            onTermoAlterado={setTermo}
+            onBuscar={buscar}
+            onLimpar={limpar}
+          />
+          <View style={styles.conteudo}>
+            {procurando ? (
+              <Carregando mensagem='Procurando filmes...'/>
+            )
+            : carregando ? (
+              <Carregando mensagem="Buscando os filmes em alta..." />
+            ) : erro ? (
+              <Text style={styles.erro}>{erro}</Text>
+            ) : resultados === null ? (
+              <ListaFilmes 
+                titulo="Em alta nesta semana" 
+                filmes={emAlta}
+                onSelecionar={setFilmeSelecionado} 
+              />
+            ) : resultados.length === 0 ? (
+              <Text style={styles.erro}>
+                {`Nenhum filme encontrado para “${termoBuscado}”.`}
+              </Text>
+            ) : (
+              <ListaFilmes
+                titulo={`Resultados para “${termoBuscado}”`}
+                filmes={resultados}
+                onSelecionar={setFilmeSelecionado}
+              />
+            )}
+          </View>
+        </View>
+        ) : (
+          <View style={styles.conteudo}>
+            <DetalhesFilmes 
+              id={filmeSelecionado}
+              onVoltar={() => setFilmeSelecionado(null)}
             />
-          ) : resultados.length === 0 ? (
-            <Text style={styles.erro}>
-              {`Nenhum filme encontrado para “${termoBuscado}”.`}
-            </Text>
-          ) : (
-            <ListaFilmes
-              titulo={`Resultados para “${termoBuscado}”`}
-              filmes={resultados}
-            />
-          )}
-        </View>  
+          </View>
+        )}  
         <Creditos />
       </SafeAreaView>
     </SafeAreaProvider>
