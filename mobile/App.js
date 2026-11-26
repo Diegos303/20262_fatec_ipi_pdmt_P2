@@ -6,13 +6,17 @@ import Carregando from './src/components/Carregando'
 import ListaFilmes from './src/components/ListaFilmes'
 import backendClient from './src/utils/backendClient'
 import { useEffect,useState } from 'react'
-
+import Busca from './src/components/Busca'
 
 
 export default function App() {
   const [emAlta, setEmAlta] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
+  const [termoBuscado, setTermoBuscado] = useState('')
+  const [resultados, setResultados] = useState(null)
+  const [procurando, setProcurando] = useState(false)
+  const [termo, setTermo] = useState('')
 
   useEffect(() => {
     backendClient.get('/em-alta')
@@ -27,23 +31,69 @@ export default function App() {
       })
   }, [])
 
+  const buscar = () => {
+    setProcurando(true)
+    backendClient.get('/filmes',{
+      params: { busca: termo } 
+    })
+    .then((resposta) => {
+      setResultados(resposta.data)
+      setTermoBuscado(termo)
+      setErro(null)
+      setProcurando(false)
+    })
+    .catch((erro) => {
+      console.log(erro)
+      setErro((erro.response && erro.response.data && erro.response.data.mensagem) || 'Não foi possível buscar os filmes.')
+      setProcurando(false)
+    })
+  }
+
+  const limpar = () => {
+    setTermo('')
+    setResultados(null)
+    setErro(null)
+  }
+
+ 
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <Cabecalho />
+         <Busca
+          termo={termo}
+          onTermoAlterado={setTermo}
+          onBuscar={buscar}
+          onLimpar={limpar}
+        />
         <View style={styles.conteudo}>
-          {carregando ? (
+          {procurando ? (
+            <Carregando mensagem='Procurando filmes...'/>
+          )
+           : carregando ? (
             <Carregando mensagem="Buscando os filmes em alta..." />
           ) : erro ? (
             <Text style={styles.erro}>{erro}</Text>
+          ) : resultados === null ? (
+            <ListaFilmes titulo="Em alta nesta semana" filmes={emAlta} 
+            
+            />
+          ) : resultados.length === 0 ? (
+            <Text style={styles.erro}>
+              {`Nenhum filme encontrado para “${termoBuscado}”.`}
+            </Text>
           ) : (
-            <ListaFilmes titulo="Em alta nesta semana" filmes={emAlta} />
+            <ListaFilmes
+              titulo={`Resultados para “${termoBuscado}”`}
+              filmes={resultados}
+            />
           )}
         </View>  
         <Creditos />
       </SafeAreaView>
     </SafeAreaProvider>
-  )
+  ) 
 }
 
 const styles = StyleSheet.create({
@@ -55,11 +105,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   erro: {
-    fontSize: 16,
-    color: '#E0473C',
-    textAlign: 'center',
-    paddingHorizontal: 16,
-    marginTop: 24
+    color: '#FFFFFF'
   }
 
 })
