@@ -5,7 +5,7 @@ import { formatarNota, formatarDuracao } from '../utils/formatacao';
 import Carregando from "./Carregando";
 import Provedores from "./Provedores";
 
-export default function DetalhesFilmes({id, onVoltar}) { 
+export default function DetalhesFilme({id, onVoltar}) { 
   const [filme, setFilme] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState(null)
@@ -119,15 +119,18 @@ const styles = StyleSheet.create({
   titulo: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFFFFF'
+    color: '#FFFFFF',
+    paddingHorizontal: 10
   },
   texto: {
-    color: '#FFFFFF'
+    color: '#FFFFFF',
+    paddingHorizontal: 10
   },
   justwatch: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontStyle: 'italic'
+    fontStyle: 'italic',
+    paddingHorizontal: 10
   }
 })
 

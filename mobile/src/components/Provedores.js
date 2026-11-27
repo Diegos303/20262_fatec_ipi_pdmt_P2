@@ -1,11 +1,11 @@
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function Provedores({ titulo,provedores}) {
-  if(provedores.lenght === 0) return null 
+  if(provedores.length === 0) return null 
 
   return (
     <View>
-      <Text style={styles.texto}>{}titulo</Text>
+      <Text style={styles.texto}>{titulo}</Text>
       <ScrollView horizontal>
         {provedores.map((provedor)=> (
            <View key={provedor.nome} style={styles.item}>
